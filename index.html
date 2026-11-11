@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kuis Interaktif Kingdom Plantae</title>
+  <!-- Library Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <style>
+    :root {
+      --primary: #2d6a4f;
+      --primary-hover: #1b4332;
+      --accent: #52b788;
+      --bg: #f4f9f4;
+      --card-bg: #ffffff;
+      --text-dark: #1b262c;
+      --correct: #2e7d32;
+      --correct-bg: #d4edda;
+      --wrong: #c62828;
+      --wrong-bg: #f8d7da;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+      color: var(--text-dark);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 760px;
+      background: var(--card-bg);
+      border-radius: 18px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+      overflow: hidden;
+      padding: 30px;
+      position: relative;
+    }
+
+    h1, h2, h3 {
+      text-align: center;
+      color: var(--primary);
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    input[type="text"], select {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #b7e4c7;
+      border-radius: 10px;
+      font-size: 16px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus, select:focus {
+      border-color: var(--primary);
+    }
+
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      background-color: var(--primary);
+      color: #ffffff;
+      font-size: 17px;
+      font-weight: 700;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.1s;
+      margin-top: 15px;
+    }
+
+    .btn:hover {
+      background-color: var(--primary-hover);
+    }
+
+    .btn:active {
+      transform: scale(0.99);
+    }
+
+    /* Quiz Screen Styles */
+    .quiz-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      border-bottom: 2px solid #e9ecef;
+      padding-bottom: 12px;
+    }
+
+    .player-tag {
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .timer-badge {
+      background-color: #e63946;
+      color: #ffffff;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 16px;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .progress-bar-container {
+      width: 100%;
+      height: 8px;
+      background-color: #e2e8f0;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 100%;
+      background-color: #e63946;
+      transition: width 1s linear;
+    }
+
+    .question-title {
+      font-size: 19px;
+      font-weight: 600;
+      line-height: 1.5;
+      margin-bottom: 24px;
+      color: #1f2937;
+    }
+
+    .options-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .option-btn {
+      padding: 14px 18px;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: left;
+      border: 2px solid #d8f3dc;
+      background-color: #f8fafc;
+      color: #1e293b; /* Kontras font dan background terjaga */
+      transition: all 0.2s ease;
+      outline: none;
+    }
+
+    .option-btn:hover:not(:disabled) {
+      background-color: #d8f3dc;
+      border-color: var(--accent);
+    }
+
+    /* Status Jawaban */
+    .option-btn.correct {
+      background-color: var(--correct) !important;
+      border-color: #1b5e20 !important;
+      color: #ffffff !important; /* Font putih tegas di atas latar hijau */
+    }
+
+    .option-btn.wrong {
+      background-color: var(--wrong) !important;
+      border-color: #8b0000 !important;
+      color: #ffffff !important; /* Font putih tegas di atas latar merah */
+    }
+
+    .option-btn:disabled {
+      cursor: not-allowed;
+    }
+
+    .status-msg {
+      margin-top: 15px;
+      font-size: 15px;
+      font-weight: 600;
+      text-align: center;
+      min-height: 24px;
+    }
+
+    /* Review & Result */
+    .score-banner {
+      background: #edf7ed;
+      border: 2px solid #c8e6c9;
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      margin-bottom: 25px;
+    }
+
+    .score-val {
+      font-size: 44px;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .review-list {
+      max-height: 400px;
+      overflow-y: auto;
+      padding-right: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .review-item {
+      padding: 16px;
+      border-radius: 10px;
+      border-left: 6px solid #ccc;
+      background-color: #f8fafc;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.04);
+    }
+
+    .review-item.is-correct {
+      border-left-color: var(--correct);
+      background-color: #f1f8e9;
+    }
+
+    .review-item.is-wrong {
+      border-left-color: var(--wrong);
+      background-color: #ffebee;
+    }
+
+    .review-q {
+      font-weight: 700;
+      font-size: 15px;
+      margin-bottom: 8px;
+    }
+
+    .review-ans {
+      font-size: 14px;
+      margin: 4px 0;
+    }
+
+    .badge-correct {
+      color: var(--correct);
+      font-weight: 700;
+    }
+
+    .badge-wrong {
+      color: var(--wrong);
+      font-weight: 700;
+    }
+
+    .hide {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- SCREEN 1: START SCREEN -->
+    <div id="start-screen">
+      <h1>Kuis Prediksi Ujian: Kingdom Plantae</h1>
+      <div class="form-group">
+        <label for="player-name">Nama Peserta / Pemain:</label>
+        <input type="text" id="player-name" placeholder="Ketik nama Anda di sini..." autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label for="timer-select">Pilihan Durasi per Soal:</label>
+        <select id="timer-select">
+          <option value="15">15 Detik</option>
+          <option value="30" selected>30 Detik</option>
+        </select>
+      </div>
+      <button class="btn" id="start-btn">Mulai Kuis Sekarang</button>
+    </div>
+
+    <!-- SCREEN 2: QUIZ SCREEN -->
+    <div id="quiz-screen" class="hide">
+      <div class="quiz-header">
+        <div class="player-tag" id="display-player-name">Peserta: -</div>
+        <div class="timer-badge">
+          ⏳ <span id="time-left">0</span>s
+        </div>
+      </div>
+      <div class="progress-bar-container">
+        <div class="progress-bar" id="timer-bar"></div>
+      </div>
+      <div style="font-size: 14px; color: #666; margin-bottom: 8px;" id="q-counter">Soal 1 / 30</div>
+      <div class="question-title" id="question-text">Teks pertanyaan kuis akan tampil di sini...</div>
+      <div class="options-grid" id="options-container">
+        <!-- Pilihan Opsi dibuat secara dinamis -->
+      </div>
+      <div class="status-msg" id="status-message"></div>
+    </div>
+
+    <!-- SCREEN 3: RESULT & REVIEW SCREEN -->
+    <div id="result-screen" class="hide">
+      <h2>Hasil & Review Kuis</h2>
+      <h3 style="color: #495057; font-weight: 500; font-size: 18px;" id="result-title">Ujian Biologi: Kingdom Plantae</h3>
+      <div class="score-banner">
+        <p style="font-size: 16px; margin-bottom: 5px;" id="result-player">Pemain: -</p>
+        <div class="score-val" id="final-score">0</div>
+        <p style="font-weight: 600;" id="score-summary">Benar: 0 dari 30 soal</p>
+      </div>
+
+      <h4 style="margin-bottom: 12px; color: #333;">Daftar Pembahasan & Evaluasi Soal:</h4>
+      <div class="review-list" id="review-container">
+        <!-- Review Item dibuat dinamis -->
+      </div>
+
+      <button class="btn" id="restart-btn">Ulangi Kuis (Acak Ulang)</button>
+    </div>
+  </div>
+
+  <script>
+    // 30 Bank Soal Prediksi Berdasarkan Modul Kingdom Plantae
+    const rawQuestions = [
+      {
+        q: "Dinding sel pada sel-sel tumbuhan (Kingdom Plantae) terutama tersusun atas...",
+        options: ["Selulosa", "Kitin", "Peptidoglikan", "Fosfolipid"],
+        answer: "Selulosa"
+      },
+      {
+        q: "Tumbuhan lumut belum memiliki berkas pembuluh pengangkut sejati, sehingga air dan zat hara diedarkan melalui...",
+        options: ["Difusi antar-sel", "Xilem", "Floem", "Trakea"],
+        answer: "Difusi antar-sel"
+      },
+      {
+        q: "Akar semu pada tumbuhan lumut yang berfungsi untuk menempel dan menyerap air disebut...",
+        options: ["Rizoid", "Stolon", "Rizoma", "Radikula"],
+        answer: "Rizoid"
+      },
+      {
+        q: "Pada metagenesis tumbuhan lumut, spora yang berkecambah akan berkembang membentuk benang hijau bernama...",
+        options: ["Protonema", "Protalium", "Sporogonium", "Anteridium"],
+        answer: "Protonema"
+      },
+      {
+        q: "Fase generasi yang dominan dan hidup bebas mandiri pada tumbuhan lumut adalah generasi...",
+        options: ["Gametofit", "Sporofit", "Sporangium", "Kormus"],
+        answer: "Gametofit"
+      },
+      {
+        q: "Organ reproduksi jantan yang menghasilkan spermatozoid pada tumbuhan lumut dan paku dinamakan...",
+        options: ["Anteridium", "Arkegonium", "Strobilus", "Sporangium"],
+        answer: "Anteridium"
+      },
+      {
+        q: "Organ reproduksi betina yang berfungsi menghasilkan sel telur (ovum) dinamakan...",
+        options: ["Arkegonium", "Anteridium", "Indusium", "Sorus"],
+        answer: "Arkegonium"
+      },
+      {
+        q: "Generasi sporofit pada tumbuhan lumut memperoleh nutrisinya dari...",
+        options: ["Menumpang pada generasi gametofit", "Fotosintesis secara mandiri di tanah", "Menyerap sisa organisme mati dengan rizoma", "Air hujan langsung tanpa perantara"],
+        answer: "Menumpang pada generasi gametofit"
+      },
+      {
+        q: "Marchantia polymorpha adalah contoh lumut yang memiliki bentuk lembaran pipih/pita berdaging, termasuk kelas...",
+        options: ["Hepaticopsida (Lumut hati)", "Bryopsida (Lumut daun)", "Anthocerotopsida (Lumut tanduk)", "Lycopsida"],
+        answer: "Hepaticopsida (Lumut hati)"
+      },
+      {
+        q: "Lumut yang memiliki ciri tubuh tegak, menyerupai batang dan daun sederhana serta berkoloni seperti beludru (contohnya Polytrichum) tergolong...",
+        options: ["Bryopsida (Lumut daun)", "Hepaticopsida (Lumut hati)", "Anthocerotopsida (Lumut tanduk)", "Psilopsida"],
+        answer: "Bryopsida (Lumut daun)"
+      },
+      {
+        q: "Spora tumbuhan paku yang jatuh di tempat lembap akan berkecambah menjadi...",
+        options: ["Protalium", "Protonema", "Sporofil", "Rizoid"],
+        answer: "Protalium"
+      },
+      {
+        q: "Generasi yang dominan dan merupakan bentuk tumbuhan sejati pada Pteridophyta adalah fase...",
+        options: ["Sporofit", "Gametofit", "Protalium", "Kromosfer"],
+        answer: "Sporofit"
+      },
+      {
+        q: "Daun pada tumbuhan paku yang berfungsi khusus untuk menghasilkan spora disebut daun...",
+        options: ["Sporofil", "Tropofil", "Mesofil", "Makrofil"],
+        answer: "Sporofil"
+      },
+      {
+        q: "Daun paku yang hanya berfungsi untuk kegiatan fotosintesis dan tidak menghasilkan spora dinamakan...",
+        options: ["Tropofil", "Sporofil", "Sorus", "Indusium"],
+        answer: "Tropofil"
+      },
+      {
+        q: "Kumpulan kotak spora (sporangium) yang biasanya tampak berupa bintik cokelat di bawah permukaan daun paku disebut...",
+        options: ["Sorus", "Strobilus", "Indusium", "Rizoma"],
+        answer: "Sorus"
+      },
+      {
+        q: "Selaput tipis yang berfungsi melindungi sorus muda pada tumbuhan paku disebut...",
+        options: ["Indusium", "Kutikula", "Koleoptil", "Kaliptra"],
+        answer: "Indusium"
+      },
+      {
+        q: "Psilotum nudum merupakan contoh dari kelompok divisi paku...",
+        options: ["Paku telanjang (Psilophyta)", "Paku ekor kuda (Sphenophyta)", "Paku kawat (Lycophyta)", "Paku sejati (Pterophyta)"],
+        answer: "Paku telanjang (Psilophyta)"
+      },
+      {
+        q: "Tumbuhan paku dengan ciri batang berbuku-buku/beruas nyata dan terdapat silika (contoh: Equisetum) adalah...",
+        options: ["Paku ekor kuda", "Paku kawat", "Paku tanduk", "Paku lumut"],
+        answer: "Paku ekor kuda"
+      },
+      {
+        q: "Adiantum cuneatum (suplir) dan Marsilea crenata (semanggi) dikelompokkan ke dalam divisi...",
+        options: ["Paku sejati", "Paku telanjang", "Paku kawat", "Paku purba"],
+        answer: "Paku sejati"
+      },
+      {
+        q: "Alat perkembangbiakan generatif berupa kumpulan sporofil berbentuk kerucut pada Gymnospermae disebut...",
+        options: ["Strobilus", "Bunga sejati", "Sorus", "Protalium"],
+        answer: "Strobilus"
+      },
+      {
+        q: "Pohon melinjo (Gnetum gnemon) termasuk ke dalam divisi Gymnospermae, yaitu...",
+        options: ["Gnetophyta", "Cycadophyta", "Coniferophyta", "Ginkgophyta"],
+        answer: "Gnetophyta"
+      },
+      {
+        q: "Tanaman pakis haji (Cycas rumphii) memiliki perawakan mirip pohon palem dengan daun menyirip, termasuk divisi...",
+        options: ["Cycadophyta", "Coniferophyta", "Ginkgophyta", "Pinophyta"],
+        answer: "Cycadophyta"
+      },
+      {
+        q: "Ciri khas yang membedakan divisi Ginkgophyta (Ginkgo biloba) dari Gymnospermae lainnya adalah...",
+        options: ["Bentuk daunnya menyerupai kipas yang berbelah", "Memiliki bunga sejati yang mencolok", "Akarnya berakar serabut", "Biji terbungkus rapat dalam bakal buah"],
+        answer: "Bentuk daunnya menyerupai kipas yang berbelah"
+      },
+      {
+        q: "Salah satu ciri utama Angiospermae yang membedakannya dari Gymnospermae adalah...",
+        options: ["Bakal biji tersimpan di dalam bakal buah (ovarium)", "Belum memiliki berkas pengangkut", "Fase dominannya adalah gametofit", "Menghasilkan strobilus jantan dan betina"],
+        answer: "Bakal biji tersimpan di dalam bakal buah (ovarium)"
+      },
+      {
+        q: "Perhatikan ciri: akar serabut, tulang daun sejajar, bagian bunga kelipatan 3, berkas pengangkut tersebar. Ciri ini milik...",
+        options: ["Tumbuhan Monokotil", "Tumbuhan Dikotil", "Gymnospermae", "Pteridophyta"],
+        answer: "Tumbuhan Monokotil"
+      },
+      {
+        q: "Kelompok tumbuhan Monokotil suku rumput-rumputan (Gramineae/Poaceae) meliputi tanaman pangan penting seperti...",
+        options: ["Padi, jagung, dan tebu", "Kedelai, kacang tanah, dan buncis", "Singkong, jarak, dan karet", "Tomat, cabai, dan terong"],
+        answer: "Padi, jagung, dan tebu"
+      },
+      {
+        q: "Kelapa, kelapa sawit, aren, dan kurma digolongkan ke dalam famili Monokotil...",
+        options: ["Palmae (Arecaceae)", "Gramineae", "Liliaceae", "Musaceae"],
+        answer: "Palmae (Arecaceae)"
+      },
+      {
+        q: "Tanaman ketela pohon (singkong) dan karet menghasilkan getah putih dan termasuk dalam suku...",
+        options: ["Euphorbiaceae", "Solanaceae", "Papilionaceae", "Malvaceae"],
+        answer: "Euphorbiaceae"
+      },
+      {
+        q: "Tanaman kentang, tomat, terung, dan cabai tergolong ke dalam suku...",
+        options: ["Solanaceae", "Papilionaceae", "Rosaceae", "Mimosaceae"],
+        answer: "Solanaceae"
+      },
+      {
+        q: "Ciri khas famili kacang-kacangan (Papilionaceae/Fabaceae) yang berperan dalam mengikat nitrogen bebas adalah...",
+        options: ["Adanya bintil akar bersimbiosis dengan bakteri", "Batang berongga dengan daun menyirip", "Memiliki getah beracun berwarna putih", "Biji tertutup tanpa adanya endosperma"],
+        answer: "Adanya bintil akar bersimbiosis dengan bakteri"
+      }
+    ];
+
+    // State Aplikasi
+    let playerName = "";
+    let questionDuration = 30;
+    let quizQuestions = [];
+    let currentIndex = 0;
+    let scoreCount = 0;
+    let timer = null;
+    let timeLeft = 0;
+    let userAnswers = []; // Riwayat: { q, correct, chosen, isCorrect }
+
+    // Elements
+    const startScreen = document.getElementById("start-screen");
+    const quizScreen = document.getElementById("quiz-screen");
+    const resultScreen = document.getElementById("result-screen");
+    
+    const playerNameInput = document.getElementById("player-name");
+    const timerSelect = document.getElementById("timer-select");
+    const startBtn = document.getElementById("start-btn");
+    const restartBtn = document.getElementById("restart-btn");
+
+    const displayPlayerName = document.getElementById("display-player-name");
+    const timeLeftSpan = document.getElementById("time-left");
+    const timerBar = document.getElementById("timer-bar");
+    const qCounter = document.getElementById("q-counter");
+    const questionText = document.getElementById("question-text");
+    const optionsContainer = document.getElementById("options-container");
+    const statusMessage = document.getElementById("status-message");
+
+    // Fungsi Pengacak Array (Fisher-Yates)
+    function shuffle(array) {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    // Trigger Kembang Api / Confetti
+    function triggerConfetti() {
+      try {
+        confetti({
+          particleCount: 80,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+      } catch (e) {
+        console.warn("Canvas-confetti tidak dapat dimuat:", e);
+      }
+    }
+
+    // Inisialisasi Kuis Baru
+    function startQuiz() {
+      const nameVal = playerNameInput.value.trim();
+      if (!nameVal) {
+        alert("Silakan masukkan nama Anda terlebih dahulu.");
+        return;
+      }
+      playerName = nameVal;
+      questionDuration = parseInt(timerSelect.value);
+
+      // Acak soal dan acak pilihan jawaban di setiap soal
+      quizQuestions = shuffle(rawQuestions).map(item => {
+        return {
+          question: item.q,
+          answer: item.answer,
+          options: shuffle(item.options)
+        };
+      });
+
+      currentIndex = 0;
+      scoreCount = 0;
+      userAnswers = [];
+
+      startScreen.classList.add("hide");
+      resultScreen.classList.add("hide");
+      quizScreen.classList.remove("hide");
+
+      displayPlayerName.textContent = `Peserta: ${playerName}`;
+      renderQuestion();
+    }
+
+    // Tampilkan Soal
+    function renderQuestion() {
+      clearInterval(timer);
+      statusMessage.textContent = "";
+
+      const currentQ = quizQuestions[currentIndex];
+      qCounter.textContent = `Soal ${currentIndex + 1} / ${quizQuestions.length}`;
+      questionText.textContent = currentQ.question;
+      optionsContainer.innerHTML = "";
+
+      currentQ.options.forEach(opt => {
+        const btn = document.createElement("button");
+        btn.className = "option-btn";
+        btn.textContent = opt;
+        btn.onclick = () => selectOption(btn, opt);
+        optionsContainer.appendChild(btn);
+      });
+
+      // Reset & Mulai Timer
+      timeLeft = questionDuration;
+      timeLeftSpan.textContent = timeLeft;
+      timerBar.style.width = "100%";
+      timerBar.style.transition = "none";
+      setTimeout(() => {
+        timerBar.style.transition = `width ${questionDuration}s linear`;
+        timerBar.style.width = "0%";
+      }, 50);
+
+      timer = setInterval(() => {
+        timeLeft--;
+        timeLeftSpan.textContent = timeLeft;
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          handleTimeOut();
+        }
+      }, 1000);
+    }
+
+    // Aksi Memilih Jawaban
+    function selectOption(selectedBtn, chosenAnswer) {
+      clearInterval(timer);
+      const currentQ = quizQuestions[currentIndex];
+      const isCorrect = (chosenAnswer === currentQ.answer);
+
+      // Nonaktifkan semua pilihan
+      const allButtons = optionsContainer.querySelectorAll(".option-btn");
+      allButtons.forEach(btn => btn.disabled = true);
+
+      if (isCorrect) {
+        selectedBtn.classList.add("correct");
+        statusMessage.textContent = "Jawaban Benar! 🎉";
+        statusMessage.style.color = "var(--correct)";
+        scoreCount++;
+        triggerConfetti();
+      } else {
+        selectedBtn.classList.add("wrong");
+        statusMessage.textContent = "Jawaban Kurang Tepat!";
+        statusMessage.style.color = "var(--wrong)";
+        // Sorot jawaban yang benar
+        allButtons.forEach(btn => {
+          if (btn.textContent === currentQ.answer) {
+            btn.classList.add("correct");
+          }
+        });
+      }
+
+      userAnswers.push({
+        question: currentQ.question,
+        correctAnswer: currentQ.answer,
+        userAnswer: chosenAnswer,
+        isCorrect: isCorrect,
+        isTimeout: false
+      });
+
+      setTimeout(nextQuestion, 1800);
+    }
+
+    // Aksi Waktu Habis
+    function handleTimeOut() {
+      const currentQ = quizQuestions[currentIndex];
+      const allButtons = optionsContainer.querySelectorAll(".option-btn");
+      allButtons.forEach(btn => {
+        btn.disabled = true;
+        if (btn.textContent === currentQ.answer) {
+          btn.classList.add("correct");
+        }
+      });
+
+      statusMessage.textContent = "Waktu Habis! Jawaban yang benar telah ditandai.";
+      statusMessage.style.color = "var(--wrong)";
+
+      userAnswers.push({
+        question: currentQ.question,
+        correctAnswer: currentQ.answer,
+        userAnswer: "Tidak Menjawab (Waktu Habis)",
+        isCorrect: false,
+        isTimeout: true
+      });
+
+      setTimeout(nextQuestion, 2000);
+    }
+
+    // Lanjut ke Soal Berikutnya / Hasil Akhir
+    function nextQuestion() {
+      currentIndex++;
+      if (currentIndex < quizQuestions.length) {
+        renderQuestion();
+      } else {
+        showResults();
+      }
+    }
+
+    // Tampilkan Hasil & Review
+    function showResults() {
+      clearInterval(timer);
+      quizScreen.classList.add("hide");
+      resultScreen.classList.remove("hide");
+
+      const finalScore = Math.round((scoreCount / quizQuestions.length) * 100);
+      document.getElementById("result-player").textContent = `Nama Peserta: ${playerName}`;
+      document.getElementById("final-score").textContent = finalScore;
+      document.getElementById("score-summary").textContent = `Benar: ${scoreCount} dari ${quizQuestions.length} soal (${finalScore}%)`;
+
+      if (finalScore >= 75) {
+        triggerConfetti();
+      }
+
+      // Render Review
+      const reviewContainer = document.getElementById("review-container");
+      reviewContainer.innerHTML = "";
+
+      userAnswers.forEach((item, index) => {
+        const div = document.createElement("div");
+        div.className = `review-item ${item.isCorrect ? 'is-correct' : 'is-wrong'}`;
+
+        div.innerHTML = `
+          <div class="review-q">${index + 1}. ${item.question}</div>
+          <div class="review-ans">Jawaban Anda: <span class="${item.isCorrect ? 'badge-correct' : 'badge-wrong'}">${item.userAnswer}</span></div>
+          ${!item.isCorrect ? `<div class="review-ans">Jawaban Benar: <span class="badge-correct">${item.correctAnswer}</span></div>` : ''}
+        `;
+        reviewContainer.appendChild(div);
+      });
+    }
+
+    // Event Listeners
+    startBtn.addEventListener("click", startQuiz);
+    restartBtn.addEventListener("click", () => {
+      resultScreen.classList.add("hide");
+      startScreen.classList.remove("hide");
+    });
+  </script>
+</body>
+</html>
